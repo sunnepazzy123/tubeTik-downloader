@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio/Video Downloader</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-6 rounded-lg shadow-md w-96">
+        <h1 class="text-2xl font-bold text-center text-gray-800 mb-2">Download Media</h1>
+        <p class="text font-bold text-center text-gray-800 mb-2">Download YouTube, TikTok videos..</p>
+
+        <form id="downloadForm" method="POST" action="/tube-tik-downloader/">
+            <label for="video_url" class="block text-gray-700 font-semibold mb-2">Video URL:</label>
+            <input 
+                type="url" 
+                id="video_url" 
+                name="video_url" 
+                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-300 focus:outline-none" 
+                placeholder="Paste video URL here"
+                required>
+            
+            <label for="format" class="block text-gray-700 font-semibold mt-4 mb-2">Select Format:</label>
+            <select 
+                id="format" 
+                name="format" 
+                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-300 focus:outline-none"
+                required>
+                <option value="mp4">MP4 (Video)</option>
+                <option value="mp3">MP3 (Audio)</option>
+            </select>
+
+            <button 
+                type="submit"
+                id="submitButton"
+                class="w-full mt-6 bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center">
+                <span id="buttonText">Download</span>
+                <svg id="loadingSpinner" class="hidden w-5 h-5 ml-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 100 8H4z"></path>
+                </svg>
+            </button>
+            <p class="text-center text-bold text-gray-400 my-2">Powered by WireDevTeam</p>
+        </form>
+    </div>
+
+    <script>
+        const downloadForm = document.getElementById('downloadForm');
+        const submitButton = document.getElementById('submitButton');
+        const buttonText = document.getElementById('buttonText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+
+        downloadForm.addEventListener('submit', async function (event) {
+            event.preventDefault(); // Prevent default form submission behavior
+
+            // Show loading state
+            buttonText.textContent = 'Loading...';
+            loadingSpinner.classList.remove('hidden');
+            submitButton.disabled = true;
+
+            // Send form data using Fetch API
+            const formData = new FormData(downloadForm);
+            try {
+                const response = await fetch(downloadForm.action, {
+                    method: downloadForm.method,
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    // Handle file download
+                    const blob = await response.blob();
+                    const downloadUrl = window.URL.createObjectURL(blob);
+
+                    // Create a temporary link to trigger the download
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.download = response.headers.get('Content-Disposition').split('filename=')[1].replace(/"/g, '');  // Get filename from headers
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    // Optionally, revoke the URL after download
+                    window.URL.revokeObjectURL(downloadUrl);
+
+                    // Reset button state on success
+                    alert('Download completed successfully!');
+                } else {
+                    // Handle error response
+                    alert('An error occurred during the download.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to complete the download.');
+            } finally {
+                // Reset button state regardless of success or failure
+                buttonText.textContent = 'Download';
+                loadingSpinner.classList.add('hidden');
+                submitButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
