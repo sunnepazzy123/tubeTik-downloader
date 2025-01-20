@@ -1,7 +1,7 @@
 # Function to delete the file in the background after sending the response
 import os
-
-import yt_dlp
+import re
+from yt_dlp import YoutubeDL
 
 def delete_file(file_path: str):
     try:
@@ -51,10 +51,17 @@ def setFormatTemplate(basename: str, format: str):
 
 
 def getTitle(video_url: str):
-        video_title = None
+    video_title = "unknown"
+    try:
         # Get video info and extract the title
-        with yt_dlp.YoutubeDL({"quiet": True}) as ydl:
+        with YoutubeDL({"quiet": True}) as ydl:
             info_dict = ydl.extract_info(video_url, download=False)
-            video_title = info_dict.get("title", "unknown").replace(" ", "_").replace("/", "_")  # Sanitize title
+            raw_title = info_dict.get("title", "unknown")
             
-        return video_title
+            # Sanitize the title by replacing unwanted characters with an underscore
+            video_title = re.sub(r'[^\w\-_\.]', ' ', raw_title).strip()
+
+    except Exception as e:
+        print(f"Error extracting video title: {e}")
+    
+    return video_title
