@@ -2,6 +2,8 @@ version: '3.8'
 
 services:
   tube-tik-downloader:
+    image: wiredevteam2020/tube-tik-downloader:latest
+    container_name: tube-tik-downloader
     build: .
     ports:
       - "8000:8000"
