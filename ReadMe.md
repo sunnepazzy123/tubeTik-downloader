@@ -24,6 +24,9 @@ pip install --no-cache-dir -r requirements.txt
 #### **Docker Approach*
 The default port is localhost:8000 after running the command below
 ```
+  git clone <repo>
+```
+```
   docker compose up -d
 ```
 
