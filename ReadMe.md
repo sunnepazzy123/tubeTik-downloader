@@ -10,11 +10,13 @@ This project is built using the **FastApi** framework and follows a modular arch
 - [uvicorn](#uvicorn)
 - [docker](#docker)
 
-#### ***Run app using Docker***
-The default port is localhost:8000 after running the command below
+### Clone Repo
 ```
   git clone <repo-name>
 ```
+
+#### ***Run app using Docker***
+The default port is localhost:8000 after running the command below
 ```
   docker compose up -d
 ```
