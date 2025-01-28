@@ -21,8 +21,8 @@ The default port is localhost:8000 after running the command below
   docker compose up -d
 ```
 after containers are up and running, check the app and API Docs
-http://localhost:8000
-http://localhost:8000/docs#/
+- http://localhost:8000
+- http://localhost:8000/docs#/
 
 
 #### ***Run app locally***
