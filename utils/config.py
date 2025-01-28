@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-mountFolder = [
+mountFolders = [
     {
         "path": "/static",
         "directory": "static",
@@ -14,8 +14,8 @@ mountFolder = [
     },
 ]
 
-def mountStaticFolder(app: FastAPI):
-    for mount in mountFolder:
+def mountStaticFolders(app: FastAPI):
+    for mount in mountFolders:
         path = mount['path']
         directory = mount['directory']
         mountName = mount['mountName']
