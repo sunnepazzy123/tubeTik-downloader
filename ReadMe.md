@@ -10,12 +10,7 @@ This project is built using the **FastApi** framework and follows a modular arch
 - [uvicorn](#uvicorn)
 - [docker](#docker)
 
-### Install Dependencies
-```
-pip install --no-cache-dir -r requirements.txt
-```
-
-#### **Docker Approach**
+#### ***Run app using Docker***
 The default port is localhost:8000 after running the command below
 ```
   git clone <repo-name>
@@ -23,10 +18,16 @@ The default port is localhost:8000 after running the command below
 ```
   docker compose up -d
 ```
-after containers are up and running, check the API Docs
+after containers are up and running, check the app and API Docs
+http://localhost:8000
 http://localhost:8000/docs#/
 
-#### **Run app locally*
+
+#### ***Run app locally***
+### Install Dependencies
+```
+pip install --no-cache-dir -r requirements.txt
+```
 ```
   uvicorn app:app --reload
 ```
