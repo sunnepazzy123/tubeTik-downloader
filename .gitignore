@@ -1,1 +1,6 @@
 /build.sh
+/.venv/
+__pycache__/
+*.py[cod]
+/downloads/
+/*.webm
