@@ -2,103 +2,1935 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio/Video Downloader</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>TubeTik Media Studio</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <div class="bg-white p-6 rounded-lg shadow-md w-96">
-        <h1 class="text-2xl font-bold text-center text-gray-800 mb-2">Download Media</h1>
-        <p class="text font-bold text-center text-gray-800 mb-2">Download YouTube, TikTok videos..</p>
 
-        <form id="downloadForm" method="POST" action="/tube-tik-downloader/">
-            <label for="video_url" class="block text-gray-700 font-semibold mb-2">Video URL:</label>
-            <input 
-                type="url" 
-                id="video_url" 
-                name="video_url" 
-                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-300 focus:outline-none" 
-                placeholder="Paste video URL here"
-                required>
-            
-            <label for="format" class="block text-gray-700 font-semibold mt-4 mb-2">Select Format:</label>
-            <select 
-                id="format" 
-                name="format" 
-                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-300 focus:outline-none"
-                required>
-                <option value="mp4">MP4 (Video)</option>
-                <option value="mp3">MP3 (Audio)</option>
-            </select>
+<body class="min-h-screen bg-slate-950 text-white">
 
-            <button 
-                type="submit"
-                id="submitButton"
-                class="w-full mt-6 bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center">
-                <span id="buttonText">Download</span>
-                <svg id="loadingSpinner" class="hidden w-5 h-5 ml-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 100 8H4z"></path>
-                </svg>
-            </button>
-            <p class="text-center text-bold text-gray-400 my-2">Powered by WireDevTeam</p>
-        </form>
+<div class="max-w-6xl mx-auto px-4 py-8">
+
+    <!-- HEADER -->
+    <div class="mb-8">
+
+        <h1 class="text-3xl md:text-4xl font-bold">
+            TubeTik Media Studio
+        </h1>
+
+        <p class="text-slate-400 mt-2">
+            Download and edit your media files.
+        </p>
+
     </div>
 
-    <script>
-        const downloadForm = document.getElementById('downloadForm');
-        const submitButton = document.getElementById('submitButton');
-        const buttonText = document.getElementById('buttonText');
-        const loadingSpinner = document.getElementById('loadingSpinner');
 
-        downloadForm.addEventListener('submit', async function (event) {
-            event.preventDefault(); // Prevent default form submission behavior
+    <!-- DOWNLOAD -->
+    <div
+        class="
+            bg-slate-900
+            border
+            border-slate-800
+            rounded-2xl
+            p-6
+        "
+    >
 
-            // Show loading state
-            buttonText.textContent = 'Loading...';
-            loadingSpinner.classList.remove('hidden');
-            submitButton.disabled = true;
+        <h2 class="text-xl font-semibold mb-5">
+            Download Media
+        </h2>
 
-            // Send form data using Fetch API
-            const formData = new FormData(downloadForm);
-            try {
-                const response = await fetch(downloadForm.action, {
-                    method: downloadForm.method,
-                    body: formData,
-                });
 
-                if (response.ok) {
-                    // Handle file download
-                    const blob = await response.blob();
-                    const downloadUrl = window.URL.createObjectURL(blob);
+        <form id="downloadForm">
 
-                    // Create a temporary link to trigger the download
-                    const link = document.createElement('a');
-                    link.href = downloadUrl;
-                    link.download = response.headers.get('Content-Disposition').split('filename=')[1].replace(/"/g, '');  // Get filename from headers
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+            <label
+                class="block text-sm text-slate-300 mb-2"
+            >
+                Video URL
+            </label>
 
-                    // Optionally, revoke the URL after download
-                    window.URL.revokeObjectURL(downloadUrl);
 
-                    // Reset button state on success
-                    alert('Download completed successfully!');
-                } else {
-                    // Handle error response
-                    alert('An error occurred during the download.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to complete the download.');
-            } finally {
-                // Reset button state regardless of success or failure
-                buttonText.textContent = 'Download';
-                loadingSpinner.classList.add('hidden');
-                submitButton.disabled = false;
+            <input
+                type="url"
+                id="video_url"
+                name="video_url"
+                required
+                placeholder="Paste video URL"
+
+                class="
+                    w-full
+                    bg-slate-800
+                    border
+                    border-slate-700
+                    rounded-xl
+                    px-4
+                    py-3
+                "
+            >
+
+
+            <div class="grid md:grid-cols-2 gap-4 mt-4">
+
+                <div>
+
+                    <label
+                        class="block text-sm text-slate-300 mb-2"
+                    >
+                        Format
+                    </label>
+
+
+                    <select
+                        id="format"
+                        name="format"
+
+                        class="
+                            w-full
+                            bg-slate-800
+                            border
+                            border-slate-700
+                            rounded-xl
+                            px-4
+                            py-3
+                        "
+                    >
+                        <option value="mp4">
+                            MP4 Video
+                        </option>
+
+                        <option value="mp3">
+                            MP3 Audio
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="flex items-end">
+
+                    <button
+                        id="submitButton"
+                        type="submit"
+
+                        class="
+                            w-full
+                            bg-indigo-600
+                            hover:bg-indigo-500
+                            disabled:bg-slate-700
+                            rounded-xl
+                            py-3
+                            font-semibold
+                        "
+                    >
+                        <span id="buttonText">
+                            Download
+                        </span>
+                    </button>
+
+                </div>
+
+            </div>
+
+        </form>
+
+
+        <!-- PROGRESS -->
+        <div
+            id="progressContainer"
+            class="hidden mt-6"
+        >
+
+            <div class="flex justify-between mb-2">
+
+                <span
+                    id="progressStatus"
+                    class="text-sm text-slate-400"
+                >
+                    Starting...
+                </span>
+
+
+                <span
+                    id="progressPercent"
+                    class="font-semibold"
+                >
+                    0%
+                </span>
+
+            </div>
+
+
+            <div
+                class="
+                    h-3
+                    bg-slate-800
+                    rounded-full
+                    overflow-hidden
+                "
+            >
+
+                <div
+                    id="progressBar"
+                    class="
+                        h-full
+                        bg-indigo-500
+                        transition-all
+                        duration-300
+                    "
+                    style="width:0%"
+                ></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- FILES -->
+    <div
+        class="
+            mt-8
+            bg-slate-900
+            border
+            border-slate-800
+            rounded-2xl
+            overflow-hidden
+        "
+    >
+
+        <div
+            class="
+                p-6
+                border-b
+                border-slate-800
+                flex
+                justify-between
+                items-center
+            "
+        >
+
+            <div>
+
+                <h2 class="text-xl font-semibold">
+                    Downloaded Files
+                </h2>
+
+                <p class="text-sm text-slate-400 mt-1">
+                    Files stored in downloads.
+                </p>
+
+            </div>
+
+
+            <button
+                onclick="loadFiles()"
+
+                class="
+                    bg-slate-800
+                    hover:bg-slate-700
+                    px-4
+                    py-2
+                    rounded-lg
+                "
+            >
+                Refresh
+            </button>
+
+        </div>
+
+
+        <div
+            id="fileList"
+            class="divide-y divide-slate-800"
+        >
+
+            <div class="p-6 text-slate-500">
+                Loading...
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- EDIT MODAL -->
+<div
+    id="editModal"
+
+    class="
+        hidden
+        fixed
+        inset-0
+        z-50
+        bg-black/75
+        overflow-y-auto
+        p-4
+    "
+>
+
+    <div
+        class="
+            min-h-full
+            flex
+            justify-center
+            items-start
+            md:items-center
+            py-4
+        "
+    >
+
+        <div
+            class="
+                bg-slate-900
+                border
+                border-slate-700
+                rounded-2xl
+                w-full
+                max-w-2xl
+                max-h-[90vh]
+                flex
+                flex-col
+                overflow-hidden
+            "
+        >
+
+            <!-- HEADER -->
+            <div
+                class="
+                    px-6
+                    py-5
+                    border-b
+                    border-slate-800
+                    flex
+                    justify-between
+                    items-start
+                "
+            >
+
+                <div>
+
+                    <h2 class="text-2xl font-bold">
+                        Edit Video
+                    </h2>
+
+                    <p
+                        id="editingFilename"
+                        class="
+                            text-sm
+                            text-slate-400
+                            mt-1
+                            break-all
+                        "
+                    ></p>
+
+                </div>
+
+
+                <button
+                    onclick="closeEditModal()"
+                    class="text-3xl text-slate-400"
+                >
+                    &times;
+                </button>
+
+            </div>
+
+
+            <!-- SCROLL CONTENT -->
+            <div
+                class="
+                    overflow-y-auto
+                    px-6
+                    py-5
+                    flex-1
+                "
+            >
+
+                <!-- TRIM -->
+                <div class="grid sm:grid-cols-2 gap-4">
+
+                    <div>
+
+                        <label class="block text-sm mb-2">
+                            Remove Intro
+                        </label>
+
+                        <input
+                            id="introSeconds"
+                            type="number"
+                            value="0"
+                            min="0"
+                            step="0.1"
+
+                            class="
+                                w-full
+                                bg-slate-800
+                                border
+                                border-slate-700
+                                rounded-lg
+                                p-3
+                            "
+                        >
+
+                    </div>
+
+
+                    <div>
+
+                        <label class="block text-sm mb-2">
+                            Remove Outro
+                        </label>
+
+                        <input
+                            id="outroSeconds"
+                            type="number"
+                            value="0"
+                            min="0"
+                            step="0.1"
+
+                            class="
+                                w-full
+                                bg-slate-800
+                                border
+                                border-slate-700
+                                rounded-lg
+                                p-3
+                            "
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- SEGMENTS -->
+                <div class="mt-6">
+
+                    <label class="block text-sm mb-2">
+                        Keep Segments
+                    </label>
+
+                    <textarea
+                        id="segments"
+                        rows="3"
+                        placeholder="0-20, 30-45, 60-90"
+
+                        class="
+                            w-full
+                            bg-slate-800
+                            border
+                            border-slate-700
+                            rounded-lg
+                            p-3
+                        "
+                    ></textarea>
+
+                </div>
+
+
+                <!-- ZOOM -->
+                <div class="grid sm:grid-cols-2 gap-4 mt-6">
+
+                    <div>
+
+                        <label class="block text-sm mb-2">
+                            Zoom
+                        </label>
+
+                        <select
+                            id="zoom"
+
+                            class="
+                                w-full
+                                bg-slate-800
+                                border
+                                border-slate-700
+                                rounded-lg
+                                p-3
+                            "
+                        >
+
+                            <option value="">
+                                No Zoom
+                            </option>
+
+                            <option value="1.03">
+                                3%
+                            </option>
+
+                            <option value="1.05">
+                                5%
+                            </option>
+
+                            <option value="1.08">
+                                8%
+                            </option>
+
+                            <option value="1.10">
+                                10%
+                            </option>
+
+                            <option value="1.15">
+                                15%
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div>
+
+                        <label class="block text-sm mb-2">
+                            Aspect Ratio
+                        </label>
+
+                        <select
+                            id="aspectRatio"
+
+                            class="
+                                w-full
+                                bg-slate-800
+                                border
+                                border-slate-700
+                                rounded-lg
+                                p-3
+                            "
+                        >
+
+                            <option value="original">
+                                Original
+                            </option>
+
+                            <option value="9:16">
+                                9:16 Vertical
+                            </option>
+
+                            <option value="4:5">
+                                4:5 Portrait
+                            </option>
+
+                            <option value="1:1">
+                                1:1 Square
+                            </option>
+
+                            <option value="16:9">
+                                16:9 Landscape
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <!-- LOGO -->
+                <div class="mt-6">
+
+                    <label class="block text-sm font-semibold mb-2">
+                        Logo
+                    </label>
+
+
+                    <div
+                        class="
+                            bg-slate-800
+                            border
+                            border-slate-700
+                            rounded-xl
+                            p-4
+                        "
+                    >
+
+                        <input
+                            id="logoFile"
+                            type="file"
+                            accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+
+                            class="
+                                block
+                                w-full
+                                text-sm
+                                text-slate-300
+                            "
+                        >
+
+
+                        <p class="text-xs text-slate-500 mt-3">
+                            Optional. Transparent PNG is recommended.
+                            The logo will appear at the bottom-right.
+                        </p>
+
+
+                        <div
+                            id="logoPreviewContainer"
+                            class="hidden mt-4"
+                        >
+
+                            <p
+                                class="
+                                    text-xs
+                                    text-slate-400
+                                    mb-2
+                                "
+                            >
+                                Preview
+                            </p>
+
+                            <img
+                                id="logoPreview"
+                                class="
+                                    max-h-24
+                                    max-w-40
+                                    object-contain
+                                    bg-slate-950
+                                    rounded-lg
+                                    p-2
+                                "
+                            >
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- QUALITY -->
+                <div class="grid sm:grid-cols-2 gap-4 mt-6">
+
+                    <div>
+
+                        <label class="block text-sm mb-2">
+                            Quality
+                        </label>
+
+                        <select
+                            id="quality"
+
+                            class="
+                                w-full
+                                bg-slate-800
+                                border
+                                border-slate-700
+                                rounded-lg
+                                p-3
+                            "
+                        >
+
+                            <option value="balanced">
+                                Balanced
+                            </option>
+
+                            <option value="high">
+                                High Quality
+                            </option>
+
+                            <option value="fast">
+                                Fast
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div>
+
+                        <label class="block text-sm mb-2">
+                            Output Name
+                        </label>
+
+                        <input
+                            id="outputName"
+                            type="text"
+                            placeholder="edited_video"
+
+                            class="
+                                w-full
+                                bg-slate-800
+                                border
+                                border-slate-700
+                                rounded-lg
+                                p-3
+                            "
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- FOOTER -->
+            <div
+                class="
+                    px-6
+                    py-4
+                    border-t
+                    border-slate-800
+                    flex
+                    justify-end
+                    gap-3
+                "
+            >
+
+                <button
+                    onclick="closeEditModal()"
+
+                    class="
+                        px-5
+                        py-3
+                        bg-slate-800
+                        rounded-xl
+                    "
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    id="processButton"
+                    onclick="processVideo()"
+
+                    class="
+                        px-6
+                        py-3
+                        bg-emerald-600
+                        hover:bg-emerald-500
+                        disabled:bg-slate-700
+                        rounded-xl
+                        font-semibold
+                    "
+                >
+                    Process Video
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+const downloadForm =
+    document.getElementById(
+        "downloadForm"
+    );
+
+const submitButton =
+    document.getElementById(
+        "submitButton"
+    );
+
+const buttonText =
+    document.getElementById(
+        "buttonText"
+    );
+
+const progressContainer =
+    document.getElementById(
+        "progressContainer"
+    );
+
+const progressStatus =
+    document.getElementById(
+        "progressStatus"
+    );
+
+const progressPercent =
+    document.getElementById(
+        "progressPercent"
+    );
+
+const progressBar =
+    document.getElementById(
+        "progressBar"
+    );
+
+
+let selectedFile = null;
+
+
+
+// ----------------------------------------
+// LOGO PREVIEW
+// ----------------------------------------
+
+document.getElementById(
+    "logoFile"
+).addEventListener(
+    "change",
+    function() {
+
+        const file =
+            this.files[0];
+
+        const container =
+            document.getElementById(
+                "logoPreviewContainer"
+            );
+
+        const preview =
+            document.getElementById(
+                "logoPreview"
+            );
+
+
+        if (!file) {
+
+            container.classList.add(
+                "hidden"
+            );
+
+            preview.removeAttribute(
+                "src"
+            );
+
+            return;
+        }
+
+
+        const url =
+            URL.createObjectURL(
+                file
+            );
+
+
+        preview.src =
+            url;
+
+
+        container.classList.remove(
+            "hidden"
+        );
+
+    }
+);
+
+
+
+// ----------------------------------------
+// DOWNLOAD
+// ----------------------------------------
+
+downloadForm.addEventListener(
+    "submit",
+    async function(event) {
+
+        event.preventDefault();
+
+
+        const downloadId =
+            crypto.randomUUID();
+
+
+        const formData =
+            new FormData(
+                downloadForm
+            );
+
+
+        formData.append(
+            "download_id",
+            downloadId
+        );
+
+
+        submitButton.disabled =
+            true;
+
+
+        buttonText.textContent =
+            "Downloading...";
+
+
+        progressContainer
+            .classList
+            .remove(
+                "hidden"
+            );
+
+
+        progressBar.style.width =
+            "0%";
+
+
+        progressPercent.textContent =
+            "0%";
+
+
+        progressStatus.textContent =
+            "Starting...";
+
+
+        let polling =
+            null;
+
+
+
+        function stopPolling() {
+
+            if (polling) {
+
+                clearInterval(
+                    polling
+                );
+
+                polling =
+                    null;
+
             }
-        });
-    </script>
+
+        }
+
+
+
+        async function checkProgress() {
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/tube-tik-downloader/progress/${downloadId}`
+                    );
+
+
+                if (!response.ok) {
+                    return;
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                const percent =
+                    data.percent ?? 0;
+
+
+                progressPercent.textContent =
+                    `${percent}%`;
+
+
+                progressBar.style.width =
+                    `${percent}%`;
+
+
+                switch (
+                    data.status
+                ) {
+
+                    case "starting":
+
+                        progressStatus.textContent =
+                            "Preparing...";
+
+                        break;
+
+
+                    case "downloading":
+
+                        progressStatus.textContent =
+                            "Downloading...";
+
+                        break;
+
+
+                    case "processing":
+
+                        progressStatus.textContent =
+                            "Processing...";
+
+                        break;
+
+
+                    case "completed":
+
+                        progressStatus.textContent =
+                            "Completed";
+
+                        stopPolling();
+
+                        break;
+
+
+                    case "failed":
+
+                        progressStatus.textContent =
+                            "Failed";
+
+                        stopPolling();
+
+                        break;
+
+                }
+
+            }
+            catch (error) {
+
+                console.error(
+                    error
+                );
+
+            }
+
+        }
+
+
+
+        polling =
+            setInterval(
+                checkProgress,
+                1500
+            );
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/tube-tik-downloader",
+                    {
+                        method: "POST",
+                        body: formData
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                const error =
+                    await response.json();
+
+
+                throw new Error(
+                    error.detail ||
+                    "Download failed"
+                );
+
+            }
+
+
+            const blob =
+                await response.blob();
+
+
+            const url =
+                URL.createObjectURL(
+                    blob
+                );
+
+
+            let filename =
+                getFilenameFromResponse(
+                    response,
+                    "download.mp4"
+                );
+
+
+            const link =
+                document.createElement(
+                    "a"
+                );
+
+
+            link.href =
+                url;
+
+
+            link.download =
+                filename;
+
+
+            document.body.appendChild(
+                link
+            );
+
+
+            link.click();
+
+
+            link.remove();
+
+
+            setTimeout(
+                () =>
+                    URL.revokeObjectURL(
+                        url
+                    ),
+                1000
+            );
+
+
+            progressPercent.textContent =
+                "100%";
+
+
+            progressBar.style.width =
+                "100%";
+
+
+            progressStatus.textContent =
+                "Completed";
+
+
+            stopPolling();
+
+
+            await loadFiles();
+
+        }
+        catch (error) {
+
+            console.error(
+                error
+            );
+
+
+            alert(
+                error.message
+            );
+
+        }
+        finally {
+
+            stopPolling();
+
+
+            submitButton.disabled =
+                false;
+
+
+            buttonText.textContent =
+                "Download";
+
+        }
+
+    }
+);
+
+
+
+// ----------------------------------------
+// FILE LIST
+// ----------------------------------------
+
+async function loadFiles() {
+
+    const fileList =
+        document.getElementById(
+            "fileList"
+        );
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/tube-tik-downloader/files"
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Could not load files"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            !data.files ||
+            data.files.length === 0
+        ) {
+
+            fileList.innerHTML = `
+                <div class="p-8 text-slate-500">
+                    No downloaded files.
+                </div>
+            `;
+
+            return;
+
+        }
+
+
+fileList.innerHTML =
+    data.files
+        .map(
+            file => `
+            <div
+                class="
+                    p-5
+                    flex
+                    flex-col
+                    lg:flex-row
+                    lg:items-center
+                    lg:justify-between
+                    gap-4
+                "
+            >
+
+                <div
+                    class="
+                        min-w-0
+                        flex-1
+                        lg:max-w-[680px]
+                    "
+                >
+
+                    <p
+                        class="
+                            font-medium
+                            whitespace-nowrap
+                            overflow-hidden
+                            text-ellipsis
+                        "
+                        title="${escapeHtml(file.name)}"
+                    >
+                        ${escapeHtml(file.name)}
+                    </p>
+
+                    <p
+                        class="
+                            text-sm
+                            text-slate-500
+                            mt-1
+                            whitespace-nowrap
+                        "
+                    >
+                        ${file.size}
+                        •
+                        ${file.modified}
+                    </p>
+
+                </div>
+
+
+                <div
+                    class="
+                        flex
+                        gap-2
+                        flex-wrap
+                        lg:flex-nowrap
+                        lg:flex-shrink-0
+                    "
+                >
+
+                    ${
+                        file.type === "video"
+                        ? `
+                            <button
+                                type="button"
+                                onclick='openEditModal(${JSON.stringify(file.name)})'
+                                class="
+                                    bg-emerald-600
+                                    hover:bg-emerald-500
+                                    px-4
+                                    py-2
+                                    rounded-lg
+                                    whitespace-nowrap
+                                "
+                            >
+                                Edit
+                            </button>
+                        `
+                        : ""
+                    }
+
+
+                    <a
+                        href="/tube-tik-downloader/files/${encodeURIComponent(file.name)}"
+                        class="
+                            bg-indigo-600
+                            hover:bg-indigo-500
+                            px-4
+                            py-2
+                            rounded-lg
+                            whitespace-nowrap
+                        "
+                    >
+                        Download
+                    </a>
+
+
+                    <button
+                        type="button"
+                        onclick='deleteFile(${JSON.stringify(file.name)})'
+                        class="
+                            bg-red-600
+                            hover:bg-red-500
+                            px-4
+                            py-2
+                            rounded-lg
+                            whitespace-nowrap
+                        "
+                    >
+                        Delete
+                    </button>
+
+                </div>
+
+            </div>
+        `
+        )
+        .join("");
+
+    }
+    catch (error) {
+
+        console.error(
+            error
+        );
+
+
+        fileList.innerHTML = `
+            <div class="p-6 text-red-400">
+                Failed to load files.
+            </div>
+        `;
+
+    }
+
+}
+
+
+
+// ----------------------------------------
+// EDIT MODAL
+// ----------------------------------------
+
+function openEditModal(
+    filename
+) {
+
+    selectedFile =
+        filename;
+
+
+    document.getElementById(
+        "editingFilename"
+    ).textContent =
+        filename;
+
+
+    document.getElementById(
+        "introSeconds"
+    ).value =
+        0;
+
+
+    document.getElementById(
+        "outroSeconds"
+    ).value =
+        0;
+
+
+    document.getElementById(
+        "segments"
+    ).value =
+        "";
+
+
+    document.getElementById(
+        "zoom"
+    ).value =
+        "";
+
+
+    document.getElementById(
+        "aspectRatio"
+    ).value =
+        "original";
+
+
+    document.getElementById(
+        "quality"
+    ).value =
+        "balanced";
+
+
+    document.getElementById(
+        "outputName"
+    ).value =
+        "";
+
+
+    document.getElementById(
+        "logoFile"
+    ).value =
+        "";
+
+
+    document.getElementById(
+        "logoPreviewContainer"
+    ).classList.add(
+        "hidden"
+    );
+
+
+    document.getElementById(
+        "editModal"
+    ).classList.remove(
+        "hidden"
+    );
+
+
+    document.body.style.overflow =
+        "hidden";
+
+}
+
+
+
+function closeEditModal() {
+
+    document.getElementById(
+        "editModal"
+    ).classList.add(
+        "hidden"
+    );
+
+
+    document.body.style.overflow =
+        "";
+
+
+    selectedFile =
+        null;
+
+}
+
+
+
+// ----------------------------------------
+// PROCESS VIDEO
+// ----------------------------------------
+
+async function processVideo() {
+
+    if (!selectedFile) {
+
+        alert(
+            "No video selected."
+        );
+
+        return;
+
+    }
+
+
+    const button =
+        document.getElementById(
+            "processButton"
+        );
+
+
+    button.disabled =
+        true;
+
+
+    button.textContent =
+        "Processing...";
+
+
+    try {
+
+        const formData =
+            new FormData();
+
+
+        formData.append(
+            "file_name",
+            selectedFile
+        );
+
+
+        formData.append(
+            "intro_seconds",
+            Number(
+                document.getElementById(
+                    "introSeconds"
+                ).value
+            ) || 0
+        );
+
+
+        formData.append(
+            "outro_seconds",
+            Number(
+                document.getElementById(
+                    "outroSeconds"
+                ).value
+            ) || 0
+        );
+
+
+        const segmentText =
+            document.getElementById(
+                "segments"
+            ).value.trim();
+
+
+        const segments =
+            parseSegments(
+                segmentText
+            );
+
+
+        if (segments) {
+
+            formData.append(
+                "segments",
+                JSON.stringify(
+                    segments
+                )
+            );
+
+        }
+
+
+        const zoom =
+            document.getElementById(
+                "zoom"
+            ).value;
+
+
+        if (zoom) {
+
+            formData.append(
+                "zoom",
+                zoom
+            );
+
+        }
+
+
+        const aspectRatio =
+            document.getElementById(
+                "aspectRatio"
+            ).value;
+
+
+        formData.append(
+            "aspect_ratio",
+            aspectRatio
+        );
+
+
+        formData.append(
+            "vertical",
+            aspectRatio === "9:16"
+                ? "true"
+                : "false"
+        );
+
+
+        formData.append(
+            "quality",
+            document.getElementById(
+                "quality"
+            ).value
+        );
+
+
+        const outputName =
+            document.getElementById(
+                "outputName"
+            ).value.trim();
+
+
+        if (outputName) {
+
+            formData.append(
+                "output_name",
+                outputName
+            );
+
+        }
+
+
+        const logoFile =
+            document.getElementById(
+                "logoFile"
+            ).files[0];
+
+
+        if (logoFile) {
+
+            formData.append(
+                "logo",
+                logoFile,
+                logoFile.name
+            );
+
+        }
+
+
+        const response =
+            await fetch(
+                "/tube-tik-downloader/edit",
+                {
+                    method: "POST",
+
+                    body:
+                        formData
+                }
+            );
+
+
+        if (!response.ok) {
+
+            let message =
+                "Video processing failed";
+
+
+            try {
+
+                const error =
+                    await response.json();
+
+
+                message =
+                    error.detail ||
+                    message;
+
+            }
+            catch (_) {}
+
+
+            throw new Error(
+                message
+            );
+
+        }
+
+
+        button.textContent =
+            "Preparing file...";
+
+
+        const blob =
+            await response.blob();
+
+
+        const url =
+            URL.createObjectURL(
+                blob
+            );
+
+
+        const filename =
+            getFilenameFromResponse(
+                response,
+                `edited_${selectedFile}`
+            );
+
+
+        const link =
+            document.createElement(
+                "a"
+            );
+
+
+        link.href =
+            url;
+
+
+        link.download =
+            filename;
+
+
+        document.body.appendChild(
+            link
+        );
+
+
+        link.click();
+
+
+        link.remove();
+
+
+        setTimeout(
+            () =>
+                URL.revokeObjectURL(
+                    url
+                ),
+            1000
+        );
+
+
+        button.textContent =
+            "Completed";
+
+
+        await loadFiles();
+
+
+        setTimeout(
+            () =>
+                closeEditModal(),
+            600
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            error
+        );
+
+
+        alert(
+            error.message ||
+            "Processing failed."
+        );
+
+    }
+    finally {
+
+        button.disabled =
+            false;
+
+
+        setTimeout(
+            () => {
+
+                button.textContent =
+                    "Process Video";
+
+            },
+            1000
+        );
+
+    }
+
+}
+
+
+
+// ----------------------------------------
+// DELETE
+// ----------------------------------------
+
+async function deleteFile(
+    filename
+) {
+
+    if (
+        !confirm(
+            `Delete "${filename}"?`
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    const response =
+        await fetch(
+            `/tube-tik-downloader/files/${encodeURIComponent(filename)}`,
+            {
+                method:
+                    "DELETE"
+            }
+        );
+
+
+    if (!response.ok) {
+
+        alert(
+            "Delete failed."
+        );
+
+        return;
+
+    }
+
+
+    await loadFiles();
+
+}
+
+
+
+// ----------------------------------------
+// HELPERS
+// ----------------------------------------
+
+function parseSegments(
+    text
+) {
+
+    if (!text) {
+
+        return null;
+
+    }
+
+
+    return text
+        .split(",")
+        .map(
+            item => {
+
+                const parts =
+                    item
+                        .trim()
+                        .split("-");
+
+
+                if (
+                    parts.length !==
+                    2
+                ) {
+
+                    throw new Error(
+                        `Invalid segment: ${item}`
+                    );
+
+                }
+
+
+                const start =
+                    Number(
+                        parts[0]
+                    );
+
+
+                const end =
+                    Number(
+                        parts[1]
+                    );
+
+
+                if (
+                    Number.isNaN(start) ||
+                    Number.isNaN(end) ||
+                    start < 0 ||
+                    end <= start
+                ) {
+
+                    throw new Error(
+                        `Invalid segment: ${item}`
+                    );
+
+                }
+
+
+                return [
+                    start,
+                    end
+                ];
+
+            }
+        );
+
+}
+
+
+
+function getFilenameFromResponse(
+    response,
+    fallback
+) {
+
+    const disposition =
+        response.headers.get(
+            "Content-Disposition"
+        );
+
+
+    if (!disposition) {
+
+        return fallback;
+
+    }
+
+
+    const utf8Match =
+        disposition.match(
+            /filename\*=UTF-8''([^;]+)/
+        );
+
+
+    if (utf8Match) {
+
+        return decodeURIComponent(
+            utf8Match[1]
+        );
+
+    }
+
+
+    const normalMatch =
+        disposition.match(
+            /filename="?([^";]+)"?/
+        );
+
+
+    if (normalMatch) {
+
+        return normalMatch[1];
+
+    }
+
+
+    return fallback;
+
+}
+
+
+
+function escapeHtml(
+    text
+) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.textContent =
+        text;
+
+
+    return div.innerHTML;
+
+}
+
+
+
+loadFiles();
+
+</script>
+
 </body>
 </html>
