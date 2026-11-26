@@ -729,6 +729,246 @@
 
 
 
+<!-- AUDIO EDIT MODAL -->
+<div
+    id="audioModal"
+
+    class="
+        hidden
+        fixed
+        inset-0
+        z-50
+        bg-black/75
+        overflow-y-auto
+        p-4
+    "
+>
+
+    <div
+        class="
+            min-h-full
+            flex
+            justify-center
+            items-start
+            md:items-center
+            py-4
+        "
+    >
+
+        <div
+            class="
+                bg-slate-900
+                border
+                border-slate-700
+                rounded-2xl
+                w-full
+                max-w-2xl
+                max-h-[90vh]
+                flex
+                flex-col
+                overflow-hidden
+            "
+        >
+
+            <!-- HEADER -->
+            <div
+                class="
+                    px-6
+                    py-5
+                    border-b
+                    border-slate-800
+                    flex
+                    justify-between
+                    items-start
+                "
+            >
+
+                <div class="min-w-0">
+
+                    <h2 class="text-2xl font-bold">
+                        Edit Audio
+                    </h2>
+
+                    <p
+                        id="audioFilename"
+                        class="
+                            text-sm
+                            text-slate-400
+                            mt-1
+                            break-all
+                        "
+                    ></p>
+
+                </div>
+
+
+                <button
+                    onclick="closeAudioModal()"
+                    class="text-3xl text-slate-400"
+                >
+                    &times;
+                </button>
+
+            </div>
+
+
+            <!-- SCROLL CONTENT -->
+            <div
+                class="
+                    overflow-y-auto
+                    px-6
+                    py-5
+                    flex-1
+                "
+            >
+
+                <!-- PLAYER -->
+                <audio
+                    id="audioPlayer"
+                    controls
+                    preload="metadata"
+                    class="w-full"
+                ></audio>
+
+                <p class="text-xs text-slate-500 mt-2">
+                    Length:
+                    <span id="audioDuration">–</span>
+                </p>
+
+
+                <!-- PORTIONS -->
+                <div class="mt-6">
+
+                    <div class="flex justify-between items-end mb-2">
+
+                        <label class="block text-sm font-semibold">
+                            Portions to keep
+                        </label>
+
+                        <span
+                            id="audioOutputLength"
+                            class="text-xs text-slate-400"
+                        ></span>
+
+                    </div>
+
+
+                    <div
+                        id="audioSegments"
+                        class="space-y-3"
+                    ></div>
+
+
+                    <button
+                        type="button"
+                        onclick="addAudioSegmentRow()"
+
+                        class="
+                            mt-3
+                            bg-slate-800
+                            hover:bg-slate-700
+                            px-4
+                            py-2
+                            rounded-lg
+                            text-sm
+                        "
+                    >
+                        + Add portion
+                    </button>
+
+
+                    <p class="text-xs text-slate-500 mt-3">
+                        Play the song and press <b>Now</b> to grab
+                        the current time, or type it as m:ss
+                        (e.g. 1:30) or seconds. Leave End empty to
+                        keep until the end. Multiple portions are
+                        joined in order into one MP3.
+                    </p>
+
+                </div>
+
+
+                <!-- OUTPUT NAME -->
+                <div class="mt-6">
+
+                    <label class="block text-sm mb-2">
+                        Output Name
+                    </label>
+
+                    <input
+                        id="audioOutputName"
+                        type="text"
+                        placeholder="Defaults to original name + _cut"
+
+                        class="
+                            w-full
+                            bg-slate-800
+                            border
+                            border-slate-700
+                            rounded-lg
+                            p-3
+                        "
+                    >
+
+                </div>
+
+            </div>
+
+
+            <!-- FOOTER -->
+            <div
+                class="
+                    px-6
+                    py-4
+                    border-t
+                    border-slate-800
+                    flex
+                    justify-end
+                    gap-3
+                "
+            >
+
+                <button
+                    onclick="closeAudioModal()"
+
+                    class="
+                        px-5
+                        py-3
+                        bg-slate-800
+                        rounded-xl
+                    "
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    id="cutAudioButton"
+                    onclick="processAudio()"
+
+                    class="
+                        px-6
+                        py-3
+                        bg-emerald-600
+                        hover:bg-emerald-500
+                        disabled:bg-slate-700
+                        rounded-xl
+                        font-semibold
+                    "
+                >
+                    Cut &amp; Download
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
 <script>
 
 const downloadForm =
@@ -1259,6 +1499,23 @@ fileList.innerHTML =
                                 Edit
                             </button>
                         `
+                        : file.type === "audio"
+                        ? `
+                            <button
+                                type="button"
+                                onclick='openAudioModal(${JSON.stringify(file.name)})'
+                                class="
+                                    bg-emerald-600
+                                    hover:bg-emerald-500
+                                    px-4
+                                    py-2
+                                    rounded-lg
+                                    whitespace-nowrap
+                                "
+                            >
+                                Edit
+                            </button>
+                        `
                         : ""
                     }
 
@@ -1735,6 +1992,793 @@ async function processVideo() {
 
 
 // ----------------------------------------
+// AUDIO EDITOR
+// ----------------------------------------
+
+let selectedAudioFile = null;
+
+// While previewing a portion, the player
+// pauses once it reaches this time.
+let audioPreviewStopAt = null;
+
+const audioPlayer =
+    document.getElementById(
+        "audioPlayer"
+    );
+
+const audioSegmentsContainer =
+    document.getElementById(
+        "audioSegments"
+    );
+
+
+audioPlayer.addEventListener(
+    "loadedmetadata",
+    () => {
+
+        document.getElementById(
+            "audioDuration"
+        ).textContent =
+            formatTime(
+                audioPlayer.duration
+            );
+
+        updateAudioOutputLength();
+
+    }
+);
+
+
+audioPlayer.addEventListener(
+    "timeupdate",
+    () => {
+
+        if (
+            audioPreviewStopAt !== null &&
+            audioPlayer.currentTime >= audioPreviewStopAt
+        ) {
+
+            audioPlayer.pause();
+
+        }
+
+    }
+);
+
+
+audioPlayer.addEventListener(
+    "pause",
+    () => {
+
+        audioPreviewStopAt =
+            null;
+
+    }
+);
+
+
+audioSegmentsContainer.addEventListener(
+    "click",
+    event => {
+
+        const button =
+            event.target.closest(
+                "button[data-action]"
+            );
+
+        if (!button) {
+            return;
+        }
+
+        const row =
+            button.closest(
+                "[data-segment]"
+            );
+
+        const action =
+            button.dataset.action;
+
+
+        if (
+            action === "set-start" ||
+            action === "set-end"
+        ) {
+
+            const role =
+                action === "set-start"
+                    ? "start"
+                    : "end";
+
+            row.querySelector(
+                `[data-role="${role}"]`
+            ).value =
+                formatTime(
+                    audioPlayer.currentTime
+                );
+
+            updateAudioOutputLength();
+
+            return;
+
+        }
+
+
+        if (action === "preview") {
+
+            previewAudioSegment(
+                row
+            );
+
+            return;
+
+        }
+
+
+        if (action === "remove") {
+
+            row.remove();
+
+            if (
+                audioSegmentsContainer
+                    .children
+                    .length === 0
+            ) {
+
+                addAudioSegmentRow();
+
+            }
+
+            renumberAudioSegments();
+
+            updateAudioOutputLength();
+
+        }
+
+    }
+);
+
+
+audioSegmentsContainer.addEventListener(
+    "input",
+    updateAudioOutputLength
+);
+
+
+
+function openAudioModal(
+    filename
+) {
+
+    selectedAudioFile =
+        filename;
+
+    audioPreviewStopAt =
+        null;
+
+
+    document.getElementById(
+        "audioFilename"
+    ).textContent =
+        filename;
+
+
+    document.getElementById(
+        "audioDuration"
+    ).textContent =
+        "–";
+
+
+    document.getElementById(
+        "audioOutputName"
+    ).value =
+        "";
+
+
+    audioSegmentsContainer.innerHTML =
+        "";
+
+    addAudioSegmentRow();
+
+    updateAudioOutputLength();
+
+
+    audioPlayer.src =
+        `/tube-tik-downloader/files/${encodeURIComponent(filename)}`;
+
+
+    document.getElementById(
+        "audioModal"
+    ).classList.remove(
+        "hidden"
+    );
+
+
+    document.body.style.overflow =
+        "hidden";
+
+}
+
+
+
+function closeAudioModal() {
+
+    audioPlayer.pause();
+
+    audioPlayer.removeAttribute(
+        "src"
+    );
+
+    audioPlayer.load();
+
+
+    document.getElementById(
+        "audioModal"
+    ).classList.add(
+        "hidden"
+    );
+
+
+    document.body.style.overflow =
+        "";
+
+
+    selectedAudioFile =
+        null;
+
+}
+
+
+
+function addAudioSegmentRow() {
+
+    const row =
+        document.createElement(
+            "div"
+        );
+
+    row.dataset.segment =
+        "";
+
+    row.className = `
+        bg-slate-800
+        border
+        border-slate-700
+        rounded-xl
+        p-3
+    `;
+
+    row.innerHTML = `
+        <div class="flex justify-between items-center mb-2">
+
+            <span
+                data-role="label"
+                class="text-xs font-semibold text-slate-400"
+            ></span>
+
+            <div class="flex gap-2">
+
+                <button
+                    type="button"
+                    data-action="preview"
+                    class="
+                        text-xs
+                        bg-slate-700
+                        hover:bg-slate-600
+                        px-3
+                        py-1
+                        rounded-lg
+                    "
+                >
+                    &#9654; Preview
+                </button>
+
+                <button
+                    type="button"
+                    data-action="remove"
+                    class="
+                        text-xs
+                        bg-slate-700
+                        hover:bg-red-600
+                        px-3
+                        py-1
+                        rounded-lg
+                    "
+                >
+                    Remove
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            ${audioTimeField("Start", "start", "0:00")}
+            ${audioTimeField("End", "end", "end of song")}
+        </div>
+    `;
+
+    audioSegmentsContainer.appendChild(
+        row
+    );
+
+    renumberAudioSegments();
+
+}
+
+
+
+function audioTimeField(
+    label,
+    role,
+    placeholder
+) {
+
+    return `
+        <div>
+
+            <label class="block text-xs text-slate-400 mb-1">
+                ${label}
+            </label>
+
+            <div class="flex gap-1">
+
+                <input
+                    data-role="${role}"
+                    type="text"
+                    autocomplete="off"
+                    placeholder="${placeholder}"
+                    class="
+                        w-full
+                        min-w-0
+                        bg-slate-900
+                        border
+                        border-slate-700
+                        rounded-lg
+                        px-3
+                        py-2
+                    "
+                >
+
+                <button
+                    type="button"
+                    data-action="set-${role}"
+                    title="Use the player's current time"
+                    class="
+                        px-3
+                        bg-indigo-600
+                        hover:bg-indigo-500
+                        rounded-lg
+                        text-xs
+                    "
+                >
+                    Now
+                </button>
+
+            </div>
+
+        </div>
+    `;
+
+}
+
+
+
+function renumberAudioSegments() {
+
+    audioSegmentsContainer
+        .querySelectorAll(
+            "[data-segment]"
+        )
+        .forEach(
+            (row, index) => {
+
+                row.querySelector(
+                    '[data-role="label"]'
+                ).textContent =
+                    `Portion ${index + 1}`;
+
+            }
+        );
+
+}
+
+
+
+// Returns [start, end] in seconds for one
+// portion row, or throws with a readable
+// message. Empty start = beginning,
+// empty end = end of the song.
+function readAudioSegmentRow(
+    row,
+    label
+) {
+
+    const startText =
+        row.querySelector(
+            '[data-role="start"]'
+        ).value.trim();
+
+    const endText =
+        row.querySelector(
+            '[data-role="end"]'
+        ).value.trim();
+
+    const duration =
+        audioPlayer.duration;
+
+
+    const start =
+        startText
+            ? parseTime(startText)
+            : 0;
+
+    if (Number.isNaN(start)) {
+
+        throw new Error(
+            `${label}: invalid start time "${startText}". Use m:ss or seconds.`
+        );
+
+    }
+
+
+    let end;
+
+    if (endText) {
+
+        end =
+            parseTime(endText);
+
+        if (Number.isNaN(end)) {
+
+            throw new Error(
+                `${label}: invalid end time "${endText}". Use m:ss or seconds.`
+            );
+
+        }
+
+    }
+    else if (Number.isFinite(duration)) {
+
+        end =
+            duration;
+
+    }
+    else {
+
+        throw new Error(
+            `${label}: enter an end time (song length not loaded yet).`
+        );
+
+    }
+
+
+    if (end <= start) {
+
+        throw new Error(
+            `${label}: end must be after start.`
+        );
+
+    }
+
+
+    if (
+        Number.isFinite(duration) &&
+        start >= duration
+    ) {
+
+        throw new Error(
+            `${label}: starts after the end of the song (${formatTime(duration)}).`
+        );
+
+    }
+
+
+    return [
+        start,
+        end
+    ];
+
+}
+
+
+
+function readAudioSegments() {
+
+    return [
+        ...audioSegmentsContainer.querySelectorAll(
+            "[data-segment]"
+        )
+    ].map(
+        (row, index) =>
+            readAudioSegmentRow(
+                row,
+                `Portion ${index + 1}`
+            )
+    );
+
+}
+
+
+
+function updateAudioOutputLength() {
+
+    const output =
+        document.getElementById(
+            "audioOutputLength"
+        );
+
+    try {
+
+        const duration =
+            audioPlayer.duration;
+
+        const total =
+            readAudioSegments().reduce(
+                (sum, [start, end]) =>
+                    sum +
+                    (
+                        Number.isFinite(duration)
+                            ? Math.min(end, duration)
+                            : end
+                    ) -
+                    start,
+                0
+            );
+
+        output.textContent =
+            `Output length: ${formatTime(total)}`;
+
+    }
+    catch (_) {
+
+        output.textContent =
+            "";
+
+    }
+
+}
+
+
+
+function previewAudioSegment(
+    row
+) {
+
+    let segment;
+
+    try {
+
+        segment =
+            readAudioSegmentRow(
+                row,
+                "This portion"
+            );
+
+    }
+    catch (error) {
+
+        alert(
+            error.message
+        );
+
+        return;
+
+    }
+
+
+    const [start, end] =
+        segment;
+
+
+    audioPlayer.currentTime =
+        start;
+
+    audioPreviewStopAt =
+        end;
+
+
+    audioPlayer
+        .play()
+        .catch(
+            error =>
+                console.error(
+                    error
+                )
+        );
+
+}
+
+
+
+async function processAudio() {
+
+    if (!selectedAudioFile) {
+
+        alert(
+            "No audio selected."
+        );
+
+        return;
+
+    }
+
+
+    let segments;
+
+    try {
+
+        segments =
+            readAudioSegments();
+
+    }
+    catch (error) {
+
+        alert(
+            error.message
+        );
+
+        return;
+
+    }
+
+
+    const button =
+        document.getElementById(
+            "cutAudioButton"
+        );
+
+
+    button.disabled =
+        true;
+
+    button.textContent =
+        "Cutting...";
+
+    audioPlayer.pause();
+
+
+    try {
+
+        const formData =
+            new FormData();
+
+
+        formData.append(
+            "file_name",
+            selectedAudioFile
+        );
+
+
+        formData.append(
+            "segments",
+            JSON.stringify(
+                segments
+            )
+        );
+
+
+        const outputName =
+            document.getElementById(
+                "audioOutputName"
+            ).value.trim();
+
+
+        if (outputName) {
+
+            formData.append(
+                "output_name",
+                outputName
+            );
+
+        }
+
+
+        const response =
+            await fetch(
+                "/tube-tik-downloader/edit-audio",
+                {
+                    method: "POST",
+
+                    body:
+                        formData
+                }
+            );
+
+
+        if (!response.ok) {
+
+            let message =
+                "Audio cut failed";
+
+
+            try {
+
+                const error =
+                    await response.json();
+
+
+                message =
+                    error.detail ||
+                    message;
+
+            }
+            catch (_) {}
+
+
+            throw new Error(
+                message
+            );
+
+        }
+
+
+        button.textContent =
+            "Preparing file...";
+
+
+        const blob =
+            await response.blob();
+
+
+        saveBlob(
+            blob,
+            getFilenameFromResponse(
+                response,
+                "cut.mp3"
+            )
+        );
+
+
+        button.textContent =
+            "Completed";
+
+
+        await loadFiles();
+
+
+        setTimeout(
+            () =>
+                closeAudioModal(),
+            600
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            error
+        );
+
+
+        alert(
+            error.message ||
+            "Audio cut failed."
+        );
+
+    }
+    finally {
+
+        button.disabled =
+            false;
+
+
+        setTimeout(
+            () => {
+
+                button.textContent =
+                    "Cut & Download";
+
+            },
+            1000
+        );
+
+    }
+
+}
+
+
+
+// ----------------------------------------
 // DELETE
 // ----------------------------------------
 
@@ -1876,7 +2920,7 @@ function getFilenameFromResponse(
 
     const utf8Match =
         disposition.match(
-            /filename\*=UTF-8''([^;]+)/
+            /filename\*=UTF-8''([^;]+)/i
         );
 
 
@@ -1903,6 +2947,148 @@ function getFilenameFromResponse(
 
 
     return fallback;
+
+}
+
+
+
+// "95" -> 95, "1:30" -> 90, "1:02:03.5" -> 3723.5
+// Returns NaN for anything else.
+function parseTime(
+    text
+) {
+
+    const parts =
+        text.trim().split(":");
+
+    if (parts.length > 3) {
+
+        return NaN;
+
+    }
+
+
+    const lastIndex =
+        parts.length - 1;
+
+
+    const valid =
+        parts.every(
+            (part, index) =>
+                index === lastIndex
+                    ? /^\d+(\.\d+)?$/.test(part)
+                    : /^\d+$/.test(part)
+        );
+
+    if (!valid) {
+
+        return NaN;
+
+    }
+
+
+    const numbers =
+        parts.map(Number);
+
+
+    // Minutes / seconds after the first
+    // part must be under 60.
+    if (
+        numbers
+            .slice(1)
+            .some(n => n >= 60)
+    ) {
+
+        return NaN;
+
+    }
+
+
+    return numbers.reduce(
+        (total, n) =>
+            total * 60 + n,
+        0
+    );
+
+}
+
+
+
+// 90.25 -> "1:30.3", 3723.5 -> "1:02:03.5"
+function formatTime(
+    seconds
+) {
+
+    if (!Number.isFinite(seconds)) {
+
+        return "–";
+
+    }
+
+
+    // Work in whole tenths to avoid
+    // floating point rounding to "60.0".
+    const tenths =
+        Math.round(
+            Math.max(0, seconds) * 10
+        );
+
+    const hours =
+        Math.floor(tenths / 36000);
+
+    const minutes =
+        Math.floor((tenths % 36000) / 600);
+
+    const secondsText =
+        ((tenths % 600) / 10)
+            .toFixed(1)
+            .padStart(4, "0");
+
+
+    return hours > 0
+        ? `${hours}:${String(minutes).padStart(2, "0")}:${secondsText}`
+        : `${minutes}:${secondsText}`;
+
+}
+
+
+
+function saveBlob(
+    blob,
+    filename
+) {
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+    const link =
+        document.createElement(
+            "a"
+        );
+
+    link.href =
+        url;
+
+    link.download =
+        filename;
+
+    document.body.appendChild(
+        link
+    );
+
+    link.click();
+
+    link.remove();
+
+    setTimeout(
+        () =>
+            URL.revokeObjectURL(
+                url
+            ),
+        1000
+    );
 
 }
 

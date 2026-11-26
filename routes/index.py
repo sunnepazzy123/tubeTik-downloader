@@ -1,4 +1,5 @@
 import json
+import math
 import os
 import re
 import tempfile
@@ -22,6 +23,11 @@ from fastapi.responses import (
 
 from services.video_processor import (
     process_downloaded_video,
+)
+
+from services.audio_editor import (
+    AUDIO_EXTENSIONS,
+    cut_audio_file,
 )
 
 
@@ -132,6 +138,92 @@ def sanitize_filename(
         filename = "download"
 
     return filename[:180]
+
+
+def parse_segments_json(
+    segments: str | None,
+) -> list[tuple[float, float]] | None:
+    """
+    Parse a JSON list of [start, end] pairs (in seconds),
+    e.g. "[[0, 20], [30, 45]]".
+    """
+
+    if not segments:
+        return None
+
+    try:
+
+        decoded = json.loads(
+            segments
+        )
+
+        if not isinstance(
+            decoded,
+            list,
+        ):
+
+            raise ValueError(
+                "Segments must be a list"
+            )
+
+        parsed_segments = []
+
+        for item in decoded:
+
+            if (
+                not isinstance(
+                    item,
+                    list,
+                )
+                or len(
+                    item
+                ) != 2
+            ):
+
+                raise ValueError(
+                    "Invalid segment"
+                )
+
+            start = float(
+                item[0]
+            )
+
+            end = float(
+                item[1]
+            )
+
+            if (
+                not math.isfinite(start)
+                or not math.isfinite(end)
+                or start < 0
+                or end <= start
+            ):
+
+                raise ValueError(
+                    (
+                        "Invalid segment: "
+                        f"{start}-{end}"
+                    )
+                )
+
+            parsed_segments.append(
+                (
+                    start,
+                    end,
+                )
+            )
+
+        return parsed_segments
+
+    except Exception as exc:
+
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Invalid segments: "
+                f"{str(exc)}"
+            ),
+        )
 
 
 # ------------------------------------------
@@ -680,12 +772,7 @@ async def list_downloaded_files():
 
             file_type = "video"
 
-        elif extension in {
-            ".mp3",
-            ".wav",
-            ".aac",
-            ".m4a",
-        }:
+        elif extension in AUDIO_EXTENSIONS:
 
             file_type = "audio"
 
@@ -902,79 +989,9 @@ async def edit_downloaded_video(
     # Parse segments JSON
     # ----------------------------------
 
-    parsed_segments = None
-
-    if segments:
-
-        try:
-
-            decoded = json.loads(
-                segments
-            )
-
-            if not isinstance(
-                decoded,
-                list,
-            ):
-
-                raise ValueError(
-                    "Segments must be a list"
-                )
-
-            parsed_segments = []
-
-            for item in decoded:
-
-                if (
-                    not isinstance(
-                        item,
-                        list,
-                    )
-                    or len(
-                        item
-                    ) != 2
-                ):
-
-                    raise ValueError(
-                        "Invalid segment"
-                    )
-
-                start = float(
-                    item[0]
-                )
-
-                end = float(
-                    item[1]
-                )
-
-                if (
-                    start < 0
-                    or end <= start
-                ):
-
-                    raise ValueError(
-                        (
-                            "Invalid segment: "
-                            f"{start}-{end}"
-                        )
-                    )
-
-                parsed_segments.append(
-                    (
-                        start,
-                        end,
-                    )
-                )
-
-        except Exception as exc:
-
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    "Invalid segments: "
-                    f"{str(exc)}"
-                ),
-            )
+    parsed_segments = parse_segments_json(
+        segments
+    )
 
     # ----------------------------------
     # Save uploaded logo temporarily
@@ -1150,3 +1167,144 @@ async def edit_downloaded_video(
                         f"{exc}"
                     )
                 )
+
+
+# ------------------------------------------
+# EDIT AUDIO (CUT / KEEP PORTIONS -> MP3)
+# ------------------------------------------
+
+# Plain `def` so FastAPI runs the blocking
+# ffmpeg call in its threadpool instead of
+# stalling the event loop.
+@router.post(
+    "/tube-tik-downloader/edit-audio"
+)
+def edit_downloaded_audio(
+
+    file_name: str =
+        Form(...),
+
+    # JSON list of [start, end] pairs in
+    # seconds, e.g. "[[30, 75], [120, 150]]".
+    # Portions are joined in this order.
+    segments: str =
+        Form(...),
+
+    output_name: str | None =
+        Form(None),
+
+):
+
+    download_dir = get_download_dir()
+
+    safe_filename = os.path.basename(
+        file_name
+    )
+
+    input_path = os.path.join(
+        download_dir,
+        safe_filename,
+    )
+
+    if not os.path.isfile(
+        input_path
+    ):
+
+        raise HTTPException(
+            status_code=404,
+            detail=
+                "Audio file not found",
+        )
+
+    extension = (
+        os.path.splitext(
+            safe_filename
+        )[1]
+        .lower()
+    )
+
+    if extension not in AUDIO_EXTENSIONS:
+
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Unsupported audio format. "
+                "Use MP3, WAV, AAC or M4A."
+            ),
+        )
+
+    parsed_segments = parse_segments_json(
+        segments
+    )
+
+    if not parsed_segments:
+
+        raise HTTPException(
+            status_code=400,
+            detail=
+                "Add at least one portion to keep.",
+        )
+
+    clean_output_name = (
+        sanitize_filename(
+            output_name
+        )
+        if output_name
+        and output_name.strip()
+        else None
+    )
+
+    try:
+
+        final_path = cut_audio_file(
+
+            input_path=
+                input_path,
+
+            output_dir=
+                download_dir,
+
+            segments=
+                parsed_segments,
+
+            output_name=
+                clean_output_name,
+
+        )
+
+    except ValueError as exc:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(
+                exc
+            ),
+        )
+
+    except Exception as exc:
+
+        print(
+            (
+                "Audio edit failed: "
+                f"{exc}"
+            )
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(
+                exc
+            ),
+        )
+
+    return FileResponse(
+        final_path,
+
+        media_type=
+            "audio/mpeg",
+
+        filename=
+            os.path.basename(
+                final_path
+            ),
+    )
